@@ -216,22 +216,30 @@ local activeShaker = initializeBypassedShaker()
 -- =====================================================================
 -- LOAD & ENTITY SETUP
 -- =====================================================================
+
 local function loadEntityModel()
-    local objects = game:GetObjects(EntityConfig.AssetId)
-    local model = objects[1]
+	local objects = game:GetObjects(EntityConfig.AssetId)
+	if #objects == 0 then
+		error("[EntitySystem] Không load được model! AssetId: "..tostring(EntityConfig.AssetId))
+	end
+	local model = objects[1]
+	if not model then
+		error("[EntitySystem] Asset không phải Model!")
+	end
+	model.Parent = workspace
+	if not model.PrimaryPart then
+		local firstPart = model:FindFirstChildWhichIsA("BasePart", true)
+		if not firstPart then
+			error("[EntitySystem] Model không có BasePart!")
+		end
+		model.PrimaryPart = firstPart
+	end
+	return model
 
-    model.Parent = Workspace
-
-    if not model.PrimaryPart then  
-        local firstPart = model:FindFirstChildWhichIsA("BasePart", true)  
-        assert(firstPart, "[EntitySystem] Model không có BasePart hợp lệ.")  
-        model.PrimaryPart = firstPart  
-    end  
-    return model
 end
 
-local entityModel
-local rootPart
+local entityModel = nil
+local rootPart = nil
 local entityFinished = false
 local proximityConnection = nil
 local flickerConnection = nil
@@ -891,8 +899,13 @@ return function(customConfig)
             if EntityConfig[k] ~= nil then EntityConfig[k] = v end
         end
     end
-entitymodel = loadEntityModel()
-rootpart = entitymodel.PrimaryPart
+
+entityModel = loadEntityModel()
+
+	if not entityModel then
+		error("entityModel nil")
+	end
+	rootPart = entityModel.PrimaryPart
 
     task.spawn(runEntityBehavior)
 end
