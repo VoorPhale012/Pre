@@ -268,6 +268,91 @@ local despawnEntity
 -- =====================================================================
 local isJumpscareRunning = false
 
+local function runJumpscare()
+    local v119 = LoadCustomAsset(EntityConfig.Image1)
+    local v120 = LoadCustomAsset(EntityConfig.Image2)
+    local v121 = nil
+    local v122
+    if EntityConfig.Sound1 then
+        v122 = loadSound(EntityConfig.Sound1)
+    else
+        v122 = nil
+    end
+    if EntityConfig.Sound2 then
+        v121 = loadSound(EntityConfig.Sound2)
+    end
+    local vu123 = Instance.new("ScreenGui")
+    local vu124 = Instance.new("Frame")
+    local vu125 = Instance.new("ImageLabel")
+    vu123.Name = "JumpscareGui"
+    vu123.IgnoreGuiInset = true
+    vu123.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    vu124.Name = "Background"
+    vu124.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    vu124.BorderSizePixel = 0
+    vu124.Size = UDim2.new(1, 0, 1, 0)
+    vu124.ZIndex = 999
+    vu125.Name = "Face"
+    vu125.AnchorPoint = Vector2.new(0.5, 0.5)
+    vu125.BackgroundTransparency = 1
+    vu125.Position = UDim2.new(0.5, 0, 0.5, 0)
+    vu125.ResampleMode = Enum.ResamplerMode.Pixelated
+    vu125.Size = UDim2.new(0, 150, 0, 150)
+    vu125.Image = v119
+    vu125.Parent = vu124
+    vu124.Parent = vu123
+    vu123.Parent = game:GetService("CoreGui")
+    local v126 = EntityConfig.Tease
+    local v127 = vu123.AbsoluteSize.Y
+    local v128 = v127 / 5
+    local v129 = v127 / 2.5
+    if v126[1] then
+        local v130 = math.random(v126.Min, v126.Max)
+        v122:Play()
+        for _ = v126.Min, v130 do
+            task.wait(math.random(100, 200) / 100)
+            local v131 = (v129 - v128) / v130
+            vu125.Size = UDim2.new(0, vu125.AbsoluteSize.X + v131, 0, vu125.AbsoluteSize.Y + v131)
+        end
+        task.wait(math.random(100, 200) / 100)
+    end
+    if EntityConfig.Flashing[1] then
+        task.spawn(function()
+            while vu123.Parent do
+                vu124.BackgroundColor3 = EntityConfig.Flashing[2]
+                task.wait(math.random(25, 100) / 1000)
+                vu124.BackgroundColor3 = Color3.new(0, 0, 0)
+                task.wait(math.random(25, 100) / 1000)
+            end
+        end)
+    end
+    if EntityConfig.Shake then
+        task.spawn(function()
+            local v132 = vu125.Position
+            while vu123.Parent do
+                vu125.Position = v132 + UDim2.new(0, math.random(- 10, 10), 0, math.random(- 10, 10))
+                vu125.Rotation = math.random(- 5, 5)
+                task.wait()
+            end
+        end)
+    end
+    vu125.Image = v120
+    vu125.Size = UDim2.new(0, v129, 0, v129)
+    v121:Play()
+    vu4:Create(vu125, TweenInfo.new(0.75), {
+        Size = UDim2.new(0, v127 * 3, 0, v127 * 3),
+        ImageTransparency = 0.5
+    }):Play()
+    task.wait(0.75)
+    vu123:Destroy()
+    if v122 then
+        v122:Destroy()
+    end
+    if v121 then
+        v121:Destroy()
+    end
+end
+
 local function executeJumpscare()
     -- Nếu chế độ Hút máu liên tục (ConstantBloodSucking) đang bật, 
     -- chúng ta không cần khóa isJumpscareRunning ở đây vì HitboxConnection đã quản lý vòng lặp.
@@ -297,6 +382,7 @@ local function executeJumpscare()
         
         -- 4. Kiểm tra kết quả
         if (currentHealth - finalDamage) <= 0 then
+runJumpscare()
             EntityConfig.OnKillPlayer()
             
             pcall(function()
